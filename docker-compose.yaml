@@ -1,0 +1,21 @@
+services:
+  backend:
+    image: ${ECR_REGISTRY}/${ECR_BACKEND_REPO}:${IMAGE_TAG}
+    container_name: crm_backend
+    restart: unless-stopped
+    env_file:
+      - /opt/crm/.env
+    expose:
+      - "8000"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --timeout 300 --workers 3"
+
+  frontend:
+    image: ${ECR_REGISTRY}/${ECR_FRONTEND_REPO}:${IMAGE_TAG}
+    container_name: crm_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
