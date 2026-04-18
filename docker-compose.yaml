@@ -1,6 +1,6 @@
 services:
   backend:
-    image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm_backend:latest
+    image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm-backend:latest
     container_name: crm_backend
     restart: unless-stopped
     environment:
@@ -22,7 +22,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm_frontend:latest
+    image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm-frontend:latest
     container_name: crm_frontend
     restart: unless-stopped
     depends_on:
