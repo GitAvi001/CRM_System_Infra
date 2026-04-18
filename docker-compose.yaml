@@ -3,8 +3,6 @@ services:
     image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm_backend:latest
     container_name: crm_backend
     restart: unless-stopped
-    env_file:
-      - /opt/crm/.env
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: user
