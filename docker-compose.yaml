@@ -10,7 +10,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       DJANGO_SECRET_KEY: "(69zz*s)t=@yor!wt2!ob-gfze%veu^oy8#*moxq7t9kz0=xkl"
-      DJANGO_ALLOWED_HOSTS: "*"
+      DJANGO_ALLOWED_HOSTS: "51.21.200.130,backend,localhost,127.0.0.1"
       DJANGO_DEBUG: "False"
     expose:
       - "8000"
@@ -29,6 +29,8 @@ services:
       - backend
     ports:
       - "80:80"
+    environment:
+      "http://51.21.200.130:8000/api/"
 
   db:
     image: postgres:15
