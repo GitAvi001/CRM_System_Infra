@@ -30,7 +30,7 @@ services:
     ports:
       - "80:80"
     environment:
-      "http://51.21.200.130:8000/api/"
+      - REACT_APP_BACKEND_URL=http://51.21.200.130:8000/api/
 
   db:
     image: postgres:15
