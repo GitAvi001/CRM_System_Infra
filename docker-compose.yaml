@@ -1,21 +1,52 @@
 services:
   backend:
-    image: ${ECR_REGISTRY}/${ECR_BACKEND_REPO}:${IMAGE_TAG}
+    image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm_backend:latest
     container_name: crm_backend
     restart: unless-stopped
     env_file:
       - /opt/crm/.env
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DJANGO_SECRET_KEY: "(69zz*s)t=@yor!wt2!ob-gfze%veu^oy8#*moxq7t9kz0=xkl"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DJANGO_DEBUG: "False"
     expose:
       - "8000"
     command: >
       sh -c "python manage.py migrate --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --timeout 300 --workers 3"
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
-    image: ${ECR_REGISTRY}/${ECR_FRONTEND_REPO}:${IMAGE_TAG}
+    image: 451393837270.dkr.ecr.eu-north-1.amazonaws.com/crm_frontend:latest
     container_name: crm_frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "80:80"
+
+  db:
+    image: postgres:15
+    container_name: crm_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d mydatabase" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
