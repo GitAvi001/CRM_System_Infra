@@ -22,7 +22,7 @@ jobs:
           repository: GitAvi001/CRM_System   # public repo – hardcoded, no secret needed
           path: CRM_System
 
-      # ── Debug: confirm folder structure (can remove after first successful run) ─
+      # ── Debug: confirm folder structure (remove after first successful run) ───
       - name: Debug – List CRM_System contents
         run: ls -la CRM_System/
 
@@ -34,11 +34,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ── 4. Authenticate with Amazon ECR ──────────────────────────────────────
+      - name: Login to Amazon ECR
+        id: login-ecr          # outputs.registry = <account>.dkr.ecr.<region>.amazonaws.com
+        uses: aws-actions/amazon-ecr-login@v2
 
       # ── 5. Build and push the Frontend image to ECR ───────────────────────────
       - name: Build and Push Frontend Image to ECR
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}  # e.g. 451393837270.dkr.ecr.eu-north-1.amazonaws.com
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
         run: |
           cd CRM_System/frontend
