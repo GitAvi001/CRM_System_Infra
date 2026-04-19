@@ -19,8 +19,8 @@ jobs:
       - name: Checkout CRM_System repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ secrets.CRM_REPO }}   # e.g. GitAvi001/CRM_System
-          token: ${{ secrets.GH_PAT }}           # Personal Access Token with repo read access
+          repository: ${{ secrets.CRM_REPO }}   # e.g. GitAvi001/CRM_System  (set this secret)
+          # token: ${{ secrets.GH_PAT }}         # Uncomment + add GH_PAT secret if repo is PRIVATE
           path: crm-system
 
       # ── 3. Configure AWS credentials ─────────────────────────────────────────
