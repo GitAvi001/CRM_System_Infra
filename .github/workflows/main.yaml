@@ -92,13 +92,13 @@ jobs:
                   "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
             # Bring down existing containers (keep db volume to preserve data)
-            docker compose -f docker-compose.yaml down
+            docker-compose -f docker-compose.yaml down
 
             # Pull the freshly built images from ECR
-            docker compose -f docker-compose.yaml pull
+            docker-compose -f docker-compose.yaml pull
 
             # Start all services in detached mode
-            docker compose -f docker-compose.yaml up -d
+            docker-compose -f docker-compose.yaml up -d
 
             # Remove dangling/untagged images to free disk space
             docker image prune -f
