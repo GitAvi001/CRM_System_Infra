@@ -23,6 +23,10 @@ jobs:
           # token: ${{ secrets.GH_PAT }}         # Uncomment + add GH_PAT secret if repo is PRIVATE
           path: CRM_System
 
+      # ── Debug: list checked-out repo structure ────────────────────────────────
+      - name: Debug – List CRM_System contents
+        run: ls -la CRM_System/
+
       # ── 3. Configure AWS credentials ─────────────────────────────────────────
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,7 +47,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
         run: |
-          cd CRM_System/frontend
+          cd CRM_System/Frontend
           docker buildx build --platform linux/amd64 --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest" --no-cache --force-rm --push .
 
       # ── 6. Build and push the Backend image to ECR ────────────────────────────
