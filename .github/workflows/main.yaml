@@ -44,11 +44,7 @@ jobs:
           REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
         run: |
           cd crm-system/frontend
-          docker buildx build \
-            --platform linux/amd64 \
-            --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" \
-            -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest" \
-            --no-cache --force-rm --push .
+          docker buildx build --platform linux/amd64 --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest" --no-cache --force-rm --push .
 
       # ── 6. Build and push the Backend image to ECR ────────────────────────────
       - name: Build and Push Backend Image to ECR
@@ -57,10 +53,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           cd crm-system/backend
-          docker buildx build \
-            --platform linux/amd64 \
-            -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-backend:latest" \
-            --no-cache --force-rm --push .
+          docker buildx build --platform linux/amd64 -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-backend:latest" --no-cache --force-rm --push .
 
       # ── 7. Deploy to EC2 via SSH ───────────────────────────────────────────────
       - name: Deploy to EC2 via SSH
