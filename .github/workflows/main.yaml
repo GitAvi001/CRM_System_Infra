@@ -19,11 +19,10 @@ jobs:
       - name: Checkout CRM_System repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ secrets.CRM_REPO }}   # e.g. GitAvi001/CRM_System  (set this secret)
-          # token: ${{ secrets.GH_PAT }}         # Uncomment + add GH_PAT secret if repo is PRIVATE
+          repository: GitAvi001/CRM_System   # public repo – hardcoded, no secret needed
           path: CRM_System
 
-      # ── Debug: list checked-out repo structure ────────────────────────────────
+      # ── Debug: confirm folder structure (can remove after first successful run) ─
       - name: Debug – List CRM_System contents
         run: ls -la CRM_System/
 
