@@ -47,7 +47,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
         run: |
-          cd CRM_System/Frontend
+          cd CRM_System/frontend
           docker buildx build --platform linux/amd64 --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest" --no-cache --force-rm --push .
 
       # ── 6. Build and push the Backend image to ECR ────────────────────────────
