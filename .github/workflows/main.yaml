@@ -1,0 +1,96 @@
+name: CI/CD Pipeline – CRM System to AWS EC2
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main # Trigger on pushes to main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout this infra repo (docker-compose.yaml lives here) ─────────
+      - name: Checkout CRM_System_Infra repository
+        uses: actions/checkout@v4
+
+      # ── 2. Checkout the CRM application repo (frontend + backend together) ───
+      - name: Checkout CRM_System repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.CRM_REPO }}   # e.g. GitAvi001/CRM_System
+          token: ${{ secrets.GH_PAT }}           # Personal Access Token with repo read access
+          path: crm-system
+
+      # ── 3. Configure AWS credentials ─────────────────────────────────────────
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ── 4. Authenticate with Amazon ECR ──────────────────────────────────────
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ── 5. Build and push the Frontend image to ECR ───────────────────────────
+      - name: Build and Push Frontend Image to ECR
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
+        run: |
+          cd crm-system/frontend
+          docker buildx build \
+            --platform linux/amd64 \
+            --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" \
+            -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest" \
+            --no-cache --force-rm --push .
+
+      # ── 6. Build and push the Backend image to ECR ────────────────────────────
+      - name: Build and Push Backend Image to ECR
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          cd crm-system/backend
+          docker buildx build \
+            --platform linux/amd64 \
+            -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-backend:latest" \
+            --no-cache --force-rm --push .
+
+      # ── 7. Deploy to EC2 via SSH ───────────────────────────────────────────────
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            # Pull the latest infra repo changes (docker-compose.yaml etc.)
+            cd ~/CRM_System_Infra
+            git pull origin main
+
+            # Re-authenticate Docker with ECR on the EC2 instance
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+              | docker login --username AWS --password-stdin \
+                  ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+            # Bring down existing containers (keep db volume to preserve data)
+            docker compose -f docker-compose.yaml down
+
+            # Pull the freshly built images from ECR
+            docker compose -f docker-compose.yaml pull
+
+            # Start all services in detached mode
+            docker compose -f docker-compose.yaml up -d
+
+            # Remove dangling/untagged images to free disk space
+            docker image prune -f
+
+            echo "✅ Deployment complete!"
