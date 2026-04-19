@@ -38,27 +38,26 @@ jobs:
       # ── 5. Build and push the Frontend image to ECR ───────────────────────────
       - name: Build and Push Frontend Image to ECR
         env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}  # e.g. 451393837270.dkr.ecr.eu-north-1.amazonaws.com
           REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
         run: |
-          # Authenticate Docker directly with ECR (stores real token, not a helper)
-          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
           cd CRM_System/frontend
-          docker build --platform linux/amd64 --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" --no-cache -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest" .
-          docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-frontend:latest"
+          docker build --platform linux/amd64 \
+            --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" \
+            --no-cache \
+            -t "${ECR_REGISTRY}/crm-frontend:latest" .
+          docker push "${ECR_REGISTRY}/crm-frontend:latest"
 
       # ── 6. Build and push the Backend image to ECR ────────────────────────────
       - name: Build and Push Backend Image to ECR
         env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          # Re-authenticate for backend push (token may expire between steps)
-          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
           cd CRM_System/backend
-          docker build --platform linux/amd64 --no-cache -t "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-backend:latest" .
-          docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crm-backend:latest"
+          docker build --platform linux/amd64 \
+            --no-cache \
+            -t "${ECR_REGISTRY}/crm-backend:latest" .
+          docker push "${ECR_REGISTRY}/crm-backend:latest"
 
       # ── 7. Deploy to EC2 via SSH ───────────────────────────────────────────────
       - name: Deploy to EC2 via SSH
